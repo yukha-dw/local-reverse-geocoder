@@ -30,7 +30,7 @@
     "csv-parse": "^5.5.3",
     "debug": "^4.3.4",
     "kdt": "^0.1.0",
-    "node-fetch": "^3.3.2",
+    "undici": "^6.19.8",
     "unzip-stream": "^0.3.1"
   },
   "repository": {
@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/tomayac/local-reverse-geocoder",
   "engines": {
-    "node": ">=11.0.0",
+    "node": ">=18.0.0",
     "npm": ">=6.4.1"
   },
   "devDependencies": {

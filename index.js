@@ -37,10 +37,16 @@ var kdTree = require('kdt');
 var unzip = require('unzip-stream');
 var async = require('async');
 var readline = require('readline');
-const { basename } = require('path');
-// mod.cjs
-const fetch = (...args) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
+var { Readable } = require('stream');
+var { Agent, setGlobalDispatcher } = require('undici');
+
+const agent = new Agent({
+  connect: {
+    rejectUnauthorized: false
+  }
+});
+
+setGlobalDispatcher(agent);
 
 // All data from http://download.geonames.org/export/dump/
 var GEONAMES_URL = 'https://download.geonames.org/export/dump/';
@@ -192,15 +198,16 @@ var geocoder = {
 
     fetch(geonamesUrl)
       .then((response) => {
-        if (!response.ok) {
-          throw new Error(
+        if (response.status !== 200) {
+          return callback(new Error(
             `Error downloading GeoNames ${dataName} data (response ${response.status} for URL ${geonamesUrl})`
-          );
+          ));
         }
 
-        response.body
+        Readable
+          .fromWeb(response.body)
           .on('error', (err) => {
-            throw new Error(
+            return callback(
               `Error downloading GeoNames ${dataName} data` +
                 (err ? ': ' + err : '')
             );
@@ -214,9 +221,6 @@ var geocoder = {
             );
             return callback(null, outputFilePath);
           });
-      })
-      .catch((err) => {
-        callback(err);
       });
   },
 
@@ -240,15 +244,16 @@ var geocoder = {
 
     fetch(geonamesUrl)
       .then((response) => {
-        if (!response.ok) {
-          throw new Error(
+        if (response.status !== 200) {
+          return callback(new Error(
             `Error downloading GeoNames ${dataName} data (response ${response.status} for URL ${geonamesUrl})`
-          );
+          ));
         }
 
-        response.body
+        Readable
+          .fromWeb(response.body)
           .on('error', (err) => {
-            throw new Error(
+            return callback(
               `Error downloading GeoNames ${dataName} data` +
                 (err ? ': ' + err : '')
             );
@@ -292,14 +297,11 @@ var geocoder = {
               debug(
                 `Error unzipping ${geonamesZipFilename}: Was expecting ${outputFileName}, found ${foundFiles} file(s).`
               );
-              throw new Error(
+              return callback(
                 `Was expecting ${outputFileName}, found ${foundFiles} file(s).`
               );
             }
           });
-      })
-      .catch((err) => {
-        callback(err);
       });
   },
 
